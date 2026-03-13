@@ -1,16 +1,18 @@
 import { config } from 'dotenv';
 
+// Manually call config to use your dynamic path logic
 config({ path: `.env.${process.env.NODE_ENV || 'development'}.local` });
 
 export const {
   PORT,
   CLIENT_URL,
   NODE_ENV,
-  ACCESS_TOKEN_SECRET,
+  DATABASE_URL,
+
   REFRESH_TOKEN_SECRET,
   ACCESS_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_EXPIRES_IN,
-  DATABASE_URL,
+  ACCESS_TOKEN_SECRET,
 } = process.env;
 
 // if (!process.env.DATABASE_URL) {

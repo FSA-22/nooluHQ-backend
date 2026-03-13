@@ -1,5 +1,5 @@
-import { PORT, NODE_ENV } from './config/env';
-import app from './app';
+import { PORT, NODE_ENV } from './config/env.js';
+import app from './app.js';
 // import { connectToDB, disConnectFromDB } from './databases/index.js';
 import { Server } from 'http';
 import process from 'process';
