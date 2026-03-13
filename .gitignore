@@ -1,0 +1,106 @@
+# ==============================
+# Node Modules
+# ==============================
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.yarn-cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ==============================
+# Build Output
+# ==============================
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# ==============================
+# Logs
+# ==============================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==============================
+# Environment Variables
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Runtime / Temp Files
+# ==============================
+tmp/
+temp/
+.cache/
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================
+# Database
+# ==============================
+*.sqlite
+*.sqlite3
+*.db
+
+# Prisma
+prisma/dev.db
+prisma/*.db
+prisma/*.db-journal
+
+# ==============================
+# Docker
+# ==============================
+.dockerignore
+docker-compose.override.yml
+
+# ==============================
+# Testing
+# ==============================
+coverage/
+.nyc_output/
+
+# ==============================
+# IDE / Editor
+# ==============================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# ==============================
+# OS Files
+# ==============================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ==============================
+# TypeScript
+# ==============================
+*.tsbuildinfo
+
+# ==============================
+# Miscellaneous
+# ==============================
+*.tgz
+*.zip
+*.tar.gz
+
+# ==============================
+# Optional: Ignore local config overrides
+# ==============================
+config/local.*
+
