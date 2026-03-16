@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "nodemon --exec ts-node src/server.ts",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
     "build": "tsc",
@@ -23,10 +23,14 @@
   },
   "homepage": "https://github.com/FSA-22/nooluHQ-backend#readme",
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.96",
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.5.0",
+    "@types/nodemailer": "^7.0.11",
     "@typescript-eslint/eslint-plugin": "^8.57.0",
     "@typescript-eslint/parser": "^8.57.0",
     "eslint": "^10.0.3",
@@ -38,9 +42,13 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "morgan": "^1.10.1"
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.3.0",
+    "morgan": "^1.10.1",
+    "nodemailer": "^8.0.2"
   }
 }

@@ -1,8 +1,8 @@
-import { PORT, NODE_ENV } from './config/env.js';
-import app from './app.js';
-// import { connectToDB, disConnectFromDB } from './databases/index.js';
+import { PORT, NODE_ENV } from './config/env.ts';
+import app from './app.ts';
 import { Server } from 'http';
 import process from 'process';
+import { connectDB, disconnectDB } from './config/db.ts';
 
 // 1. CATCH SYNC ERRORS
 process.on('uncaughtException', (err: Error) => {
@@ -13,7 +13,7 @@ process.on('uncaughtException', (err: Error) => {
 
 // 2. START THE SERVER
 const server: Server = app.listen(PORT, async () => {
-  // await connectToDB();
+  await connectDB();
   console.log(`Server running on port ${PORT} | Env: ${NODE_ENV}`);
 });
 
@@ -39,8 +39,8 @@ const shutdown = (signal: NodeJS.Signals) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
 
   server.close(async () => {
+    await disconnectDB();
     console.log('HTTP server closed.');
-    // await disConnectFromDB();
     process.exit(0);
   });
 

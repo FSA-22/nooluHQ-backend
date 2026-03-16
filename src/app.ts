@@ -1,12 +1,15 @@
-import express, { Application, Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import 'dotenv/config';
 
-import authRoutes from './routes/auth.routes.js';
-import { CLIENT_URL, NODE_ENV } from './config/env.js';
+// Import types separately (compile-time only)
+import type { Request, Response } from 'express';
 
-const app: Application = express();
+import { CLIENT_URL, NODE_ENV } from './config/env.ts';
+import authRouter from './routes/auth.route.ts';
+
+const app = express();
 
 // Middleware
 app.use(cors());
@@ -23,7 +26,7 @@ if (NODE_ENV !== 'production') {
 }
 
 // Routes
-app.use('/api/v1', authRoutes);
+app.use('/api/v1/auth', authRouter);
 
 // Health check
 app.get('/', (_req: Request, res: Response) => {

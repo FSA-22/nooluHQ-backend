@@ -7,14 +7,17 @@ export const {
   PORT,
   CLIENT_URL,
   NODE_ENV,
-  DATABASE_URL,
-
+  DATABASE_URI,
+  EMAIL_HOST,
+  EMAIL_PORT,
+  EMAIL_USER,
+  EMAIL_PASSWORD,
   REFRESH_TOKEN_SECRET,
   ACCESS_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_EXPIRES_IN,
   ACCESS_TOKEN_SECRET,
 } = process.env;
 
-// if (!process.env.DATABASE_URL) {
-//   throw new Error('DATABASE_URL is not defined');
-// }
+if (!process.env.DATABASE_URI) {
+  throw new Error('DATABASE_URL is not defined');
+}
