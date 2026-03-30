@@ -16,6 +16,7 @@ export const {
   ACCESS_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_EXPIRES_IN,
   ACCESS_TOKEN_SECRET,
+  GOOGLE_CLIENT_ID,
 } = process.env;
 
 if (!process.env.DATABASE_URI) {

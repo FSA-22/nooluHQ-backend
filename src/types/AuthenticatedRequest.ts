@@ -1,12 +1,10 @@
 import { Request } from 'express';
 
-export interface AuthenticatedUser {
+interface AuthenticatedUser {
   id: string;
-  email: string;
-  onboardingStep?: string; // optional if not always present
-  // Add other claims like roles, permissions, etc.
+  onboardingStep: string;
+  isEmailVerified: boolean;
 }
-
 export interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
 }

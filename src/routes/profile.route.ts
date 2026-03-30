@@ -1,11 +1,15 @@
-import express from 'express';
-import { createProfile } from '../controllers/onboarding.controller.js';
-import { requireStep } from '../middleware/onboarding.middleware.js';
-import { OnboardingStep } from '../enums/onboarding.enum.js';
-// import { authenticate } from '../middleware/auth.middleware';
+import { Router } from 'express';
+import { requireAuth } from '../middleware/authenticate.middleware.ts';
+import { requireOnboardingStep } from '../middleware/onboarding.middleware.ts';
+import { createOrUpdateProfile } from '../controllers/profile.controller.ts';
 
-const router = express.Router();
+const profileRouter = Router();
 
-router.post('/profile', requireStep(OnboardingStep.ACCOUNT), createProfile);
+profileRouter.post(
+  '/profile',
+  requireAuth,
+  requireOnboardingStep('profile'),
+  createOrUpdateProfile,
+);
 
-export default router;
+export default profileRouter;

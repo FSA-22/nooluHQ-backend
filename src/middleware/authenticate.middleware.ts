@@ -1,44 +1,63 @@
-import { AuthenticatedRequest } from '@/types/AuthenticatedRequest.ts';
-import { Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import type { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import User from '../models/users.model.ts';
 
-export const authenticate = (
-  req: AuthenticatedRequest,
+const getEnv = (key: string): string => {
+  const value = process.env[key];
+  if (!value) throw new Error(`${key} is not defined`);
+  return value;
+};
+
+const ACCESS_TOKEN_SECRET = getEnv('ACCESS_TOKEN_SECRET');
+
+interface JwtPayload {
+  userId: string;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        onboardingStep: string;
+        isEmailVerified: boolean;
+      };
+    }
+  }
+}
+
+export const requireAuth = async (
+  req: Request,
   res: Response,
   next: NextFunction,
-): void => {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
+    console.log('Authorization header:', authHeader);
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ message: 'Authorization token missing or malformed.' });
-      return;
+      return void res.status(401).json({ message: 'Unauthorized: No token' });
     }
 
     const token = authHeader.split(' ')[1];
-    const secret = process.env.JWT_SECRET;
 
-    if (!secret) {
-      console.error('JWT_SECRET is not defined in environment variables.');
-      res.status(500).json({ message: 'Server configuration error.' });
-      return;
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET) as JwtPayload;
+
+    const user = await User.findById(decoded.userId).select('_id onboardingStep isEmailVerified');
+
+    if (!user) {
+      return void res.status(401).json({ message: 'Unauthorized: User not found' });
     }
 
-    const decoded = jwt.verify(token, secret) as JwtPayload & {
-      id: string;
-      email: string;
-      onboardingStep?: string;
-    };
-
     req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      onboardingStep: decoded.onboardingStep,
+      id: user._id.toString(),
+      onboardingStep: user.onboardingStep,
+      isEmailVerified: user.isEmailVerified,
     };
 
-    next();
+    return next();
   } catch (error) {
-    console.error('JWT verification failed:', error);
-    res.status(401).json({ message: 'Invalid or expired token.' });
+    return void res.status(401).json({ message: 'Invalid or expired token' });
   }
 };

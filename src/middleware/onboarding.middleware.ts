@@ -1,19 +1,35 @@
-import { Response, NextFunction } from 'express';
-import { OnboardingStep } from '../enums/onboarding.enum.ts';
-import { AuthenticatedRequest } from '../types/AuthenticatedRequest.ts';
+import type { Request, Response, NextFunction } from 'express';
+import { ONBOARDING_STEPS } from '../constants/onboarding.ts';
+import type { OnboardingStep } from '../constants/onboarding.ts';
 
-export const requireStep = (step: OnboardingStep) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    const user = req.user;
+type Mode = 'strict' | 'atLeast';
 
-    if (!user) {
-      res.status(401).json({ message: 'Unauthorized: user not found in request.' });
+export const requireOnboardingStep = (requiredStep: OnboardingStep, mode: Mode = 'strict') => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized' });
       return;
     }
 
-    if (user.onboardingStep !== step) {
+    const currentStep = req.user.onboardingStep as OnboardingStep;
+
+    const currentIndex = ONBOARDING_STEPS.indexOf(currentStep);
+    const requiredIndex = ONBOARDING_STEPS.indexOf(requiredStep);
+
+    if (mode === 'strict' && currentIndex !== requiredIndex) {
       res.status(403).json({
-        message: `Access denied. Current step is '${user.onboardingStep}', required step is '${step}'.`,
+        message: 'Invalid onboarding step',
+        currentStep,
+        requiredStep,
+      });
+      return;
+    }
+
+    if (mode === 'atLeast' && currentIndex < requiredIndex) {
+      res.status(403).json({
+        message: 'Complete previous onboarding steps first',
+        currentStep,
+        requiredStep,
       });
       return;
     }
