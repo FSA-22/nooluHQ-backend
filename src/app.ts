@@ -16,6 +16,7 @@ import dashboardRouter from './routes/dashboard.route.js';
 const app = express();
 
 // Middleware
+app.set('trust proxy', 1);
 app.use(
   cors({
     origin: CLIENT_URL,
