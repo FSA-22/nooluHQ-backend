@@ -1,4 +1,4 @@
-import { ALLOWED_GOALS } from '../utils/goals.ts';
+import { ALLOWED_GOALS } from '../utils/goals.js';
 import mongoose, { Schema } from 'mongoose';
 
 const GoalSchema = new Schema(

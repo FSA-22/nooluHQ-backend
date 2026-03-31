@@ -5,7 +5,7 @@ import {
   resendOtp,
   verifyOtp,
   googleLogin,
-} from '../controllers/auth.controller.ts';
+} from '../controllers/auth.controller.js';
 
 const authRouter = Router();
 

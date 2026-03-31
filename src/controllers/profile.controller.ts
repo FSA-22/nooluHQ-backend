@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Profile from '../models/profile.model.ts';
-import User from '../models/users.model.ts';
+import Profile from '../models/profile.model.js';
+import User from '../models/users.model.js';
 
 export const createOrUpdateProfile = async (req: Request, res: Response): Promise<Response> => {
   const session = await mongoose.startSession();

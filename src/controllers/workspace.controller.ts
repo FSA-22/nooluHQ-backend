@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
-import Workspace from '../models/workspace.model.ts';
-import sendEmail from '../utils/sendEmail.ts';
+import Workspace from '../models/workspace.model.js';
+import sendEmail from '../utils/sendEmail.js';
 
-import User from '../models/users.model.ts';
+import User from '../models/users.model.js';
 
 export const createWorkspace = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();

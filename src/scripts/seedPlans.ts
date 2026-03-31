@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import Plan from '../models/plan.model.ts'; // adjust path
+import Plan from '../models/plan.model.js';
 
 const PLANS = [
   {

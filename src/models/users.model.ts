@@ -1,4 +1,4 @@
-import { ONBOARDING_STEPS } from '../constants/onboarding.ts';
+import { ONBOARDING_STEPS } from '../constants/onboarding.js';
 import mongoose from 'mongoose';
 import type { InferSchemaType } from 'mongoose';
 

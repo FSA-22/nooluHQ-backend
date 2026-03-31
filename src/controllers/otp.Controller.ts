@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import Otp from '../models/otp.model.ts';
-import User from '../models/users.model.ts';
+import Otp from '../models/otp.model.js';
+import User from '../models/users.model.js';
 import mongoose from 'mongoose';
 
 export const verifyOtp = async (req: Request, res: Response) => {

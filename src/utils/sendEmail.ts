@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { EMAIL_PASSWORD, EMAIL_USER, EMAIL_HOST, EMAIL_PORT } from '../config/env.ts';
+import { EMAIL_PASSWORD, EMAIL_USER, EMAIL_HOST, EMAIL_PORT } from '../config/env.js';
 import SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
 
 // Create transporter (handles sending)

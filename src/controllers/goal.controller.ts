@@ -1,11 +1,11 @@
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Goal from '../models/goal.model.ts';
-import Subscription from '../models/subscription.model.ts';
-import Plan from '../models/plan.model.ts';
-import User from '../models/users.model.ts';
-import workspaceModel from '../models/workspace.model.ts';
-import { ALLOWED_GOALS } from '../utils/goals.ts';
+import Goal from '../models/goal.model.js';
+import Subscription from '../models/subscription.model.js';
+import Plan from '../models/plan.model.js';
+import User from '../models/users.model.js';
+import workspaceModel from '../models/workspace.model.js';
+import { ALLOWED_GOALS } from '../utils/goals.js';
 
 export const createGoal = async (req: Request, res: Response): Promise<Response> => {
   const session = await mongoose.startSession();

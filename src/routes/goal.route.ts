@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { createGoal } from '../controllers/goal.controller.ts';
-import { requireAuth } from '../middleware/authenticate.middleware.ts';
-import { requireOnboardingStep } from '../middleware/onboarding.middleware.ts';
+import { createGoal } from '../controllers/goal.controller.js';
+import { requireAuth } from '../middleware/authenticate.middleware.js';
+import { requireOnboardingStep } from '../middleware/onboarding.middleware.js';
 
 const goalRouter = Router();
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/authenticate.middleware.ts';
-import { requireOnboardingStep } from '../middleware/onboarding.middleware.ts';
-import { createOrUpdateProfile } from '../controllers/profile.controller.ts';
+import { requireAuth } from '../middleware/authenticate.middleware.js';
+import { requireOnboardingStep } from '../middleware/onboarding.middleware.js';
+import { createOrUpdateProfile } from '../controllers/profile.controller.js';
 
 const profileRouter = Router();
 

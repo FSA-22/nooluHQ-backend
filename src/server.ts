@@ -1,8 +1,8 @@
-import { PORT, NODE_ENV } from './config/env.ts';
-import app from './app.ts';
+import { PORT, NODE_ENV } from './config/env.js';
+import app from './app.js';
 import { Server } from 'http';
 import process from 'process';
-import { connectDB, disconnectDB } from './config/db.ts';
+import { connectDB, disconnectDB } from './config/db.js';
 
 // 1. CATCH SYNC ERRORS
 process.on('uncaughtException', (err: Error) => {

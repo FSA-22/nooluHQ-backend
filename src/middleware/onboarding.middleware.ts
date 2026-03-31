@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { ONBOARDING_STEPS } from '../constants/onboarding.ts';
-import type { OnboardingStep } from '../constants/onboarding.ts';
+import { ONBOARDING_STEPS } from '../constants/onboarding.js';
+import type { OnboardingStep } from '../constants/onboarding.js';
 
 type Mode = 'strict' | 'atLeast';
 

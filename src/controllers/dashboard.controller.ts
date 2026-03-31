@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
-import User from '../models/users.model.ts';
-import Subscription from '../models/subscription.model.ts';
-import { getPercentageChange } from '../utils/percentageChange.ts';
+import User from '../models/users.model.js';
+import Subscription from '../models/subscription.model.js';
+import { getPercentageChange } from '../utils/percentageChange.js';
 
 export const getDashboard = async (req: Request, res: Response) => {
   try {

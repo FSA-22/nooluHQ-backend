@@ -1,14 +1,14 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import User from '../models/users.model.ts';
-import Otp from '../models/otp.model.ts';
-import sendEmail from '../utils/sendEmail.ts';
+import User from '../models/users.model.js';
+import Otp from '../models/otp.model.js';
+import sendEmail from '../utils/sendEmail.js';
 import mongoose from 'mongoose';
 import geoip from 'geoip-lite';
 import { OAuth2Client } from 'google-auth-library';
-import { generateAccessToken, generateRefreshToken } from '../utils/tokens.ts';
-import type { PopulatedUser } from '../types/user.ts';
-import { GOOGLE_CLIENT_ID } from '../config/env.ts';
+import { generateAccessToken, generateRefreshToken } from '../utils/tokens.js';
+import type { PopulatedUser } from '../types/user.js';
+import { GOOGLE_CLIENT_ID } from '../config/env.js';
 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 

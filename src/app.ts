@@ -6,12 +6,12 @@ import cookieParser from 'cookie-parser';
 
 import type { Request, Response } from 'express';
 
-import { CLIENT_URL, NODE_ENV } from './config/env.ts';
-import authRouter from './routes/auth.route.ts';
-import profileRouter from './routes/profile.route.ts';
-import workspaceRouter from './routes/workspace.route.ts';
-import goalRouter from './routes/goal.route.ts';
-import dashboardRouter from './routes/dashboard.route.ts';
+import { CLIENT_URL, NODE_ENV } from './config/env.js';
+import authRouter from './routes/auth.route.js';
+import profileRouter from './routes/profile.route.js';
+import workspaceRouter from './routes/workspace.route.js';
+import goalRouter from './routes/goal.route.js';
+import dashboardRouter from './routes/dashboard.route.js';
 
 const app = express();
 

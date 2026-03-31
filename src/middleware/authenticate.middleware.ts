@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/users.model.ts';
+import User from '../models/users.model.js';
 
 const getEnv = (key: string): string => {
   const value = process.env[key];

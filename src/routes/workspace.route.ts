@@ -3,9 +3,9 @@ import {
   acceptInvite,
   createWorkspace,
   inviteTeammate,
-} from '../controllers/workspace.controller.ts';
-import { requireAuth } from '../middleware/authenticate.middleware.ts';
-import { requireOnboardingStep } from '../middleware/onboarding.middleware.ts';
+} from '../controllers/workspace.controller.js';
+import { requireAuth } from '../middleware/authenticate.middleware.js';
+import { requireOnboardingStep } from '../middleware/onboarding.middleware.js';
 
 const workspaceRouter = Router();
 
