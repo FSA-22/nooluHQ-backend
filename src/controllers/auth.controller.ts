@@ -58,8 +58,6 @@ export const registerAccount = async (req: Request, res: Response): Promise<Resp
 
     const country = detectCountry(req);
 
-    console.log('Detected country:', country);
-
     const user = new User({
       email,
       password: hashedPassword,
@@ -82,15 +80,21 @@ export const registerAccount = async (req: Request, res: Response): Promise<Resp
     await session.commitTransaction();
     session.endSession();
 
-    //  Then send email
-    try {
-      await sendEmail(email, 'Your OTP Code', `Your OTP code is: ${otpCode}`);
-    } catch (emailErr) {
-      console.error('Email sending failed:', emailErr);
-      // Optionally: trigger a retry mechanism or mark OTP as "unsent"
-    }
+    // send response first
+    const response = res
+      .status(201)
+      .json({ message: 'Account created. OTP sent.', userId: user._id });
 
-    return res.status(201).json({ message: 'Account created. OTP sent.', userId: user._id });
+    // send email safely (non-blocking)
+    sendEmail(email, 'Your OTP Code', `Your OTP code is: ${otpCode}`)
+      .then(() => {
+        console.log('Email sent successfully');
+      })
+      .catch((emailErr) => {
+        console.error('Email sending failed:', emailErr);
+      });
+
+    return response;
   } catch (err) {
     console.error(err);
     if (session.inTransaction()) {
