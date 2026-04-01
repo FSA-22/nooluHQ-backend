@@ -17,6 +17,7 @@ export const {
   REFRESH_TOKEN_EXPIRES_IN,
   ACCESS_TOKEN_SECRET,
   GOOGLE_CLIENT_ID,
+  RESEND_API_KEY,
 } = process.env;
 
 if (!process.env.DATABASE_URI) {

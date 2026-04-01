@@ -86,7 +86,16 @@ export const registerAccount = async (req: Request, res: Response): Promise<Resp
       .json({ message: 'Account created. OTP sent.', userId: user._id });
 
     // send email safely (non-blocking)
-    sendEmail(email, 'Your OTP Code', `Your OTP code is: ${otpCode}`)
+    const html = `
+  <div style="font-family: Arial, sans-serif;">
+    <h2>Email Verification</h2>
+    <p>Your OTP code is:</p>
+    <h1 style="letter-spacing: 4px;">${otpCode}</h1>
+    <p>This code expires in 10 minutes.</p>
+  </div>
+`;
+
+    sendEmail(email, 'Your OTP Code', `Your OTP code is: ${html}`)
       .then(() => {
         console.log('Email sent successfully');
       })
