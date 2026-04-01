@@ -30,7 +30,7 @@ const WorkspaceSchema = new Schema(
 
         status: {
           type: String,
-          enum: ['pending', 'joined'], // ✅ fixed
+          enum: ['pending', 'joined'],
           default: 'pending',
         },
 
@@ -47,7 +47,6 @@ const WorkspaceSchema = new Schema(
   { timestamps: true },
 );
 
-// Optional: enforce one workspace per owner at DB level
 WorkspaceSchema.index({ owner: 1 }, { unique: true });
 
 export default mongoose.model('Workspace', WorkspaceSchema);

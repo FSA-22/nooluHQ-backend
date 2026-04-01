@@ -19,14 +19,14 @@ workspaceRouter.post(
 workspaceRouter.post(
   '/workspace/invite',
   requireAuth,
-  requireOnboardingStep('workspace'),
+  requireOnboardingStep('invite'),
   inviteTeammate,
 );
 
 workspaceRouter.post(
   '/workspace/accept-invite',
   requireAuth,
-  requireOnboardingStep('workspace'),
+  requireOnboardingStep('invite'),
   acceptInvite,
 );
 

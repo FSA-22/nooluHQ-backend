@@ -183,3 +183,18 @@ export const inviteTeammate = async (req: Request, res: Response) => {
     });
   }
 };
+
+// export const skipInvite = async (req: Request, res: Response) => {
+//   const userId = req.user?.id;
+
+//   if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+//   await User.findByIdAndUpdate(userId, {
+//     onboardingStep: 'goal',
+//   });
+
+//   return res.status(200).json({
+//     message: 'Invite skipped',
+//     nextStep: 'goal',
+//   });
+// };
