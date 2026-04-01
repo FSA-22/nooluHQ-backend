@@ -24,13 +24,8 @@ import nodemailer from 'nodemailer';
 
 const sendEmail = async (to: string, subject: string, text: string) => {
   try {
-    console.log(' Attempting to send email to:', to);
-
-    console.log({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      user: process.env.EMAIL_USER,
-    });
+    console.log('📧 Sending email to:', to);
+    console.log(process.env.EMAIL_USER, process.env.EMAIL_PASS);
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -40,14 +35,14 @@ const sendEmail = async (to: string, subject: string, text: string) => {
       },
     });
 
-    const info = await transporter.sendMail({
-      from: `"Your App" <${process.env.EMAIL_USER}>`,
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
       to,
       subject,
       text,
     });
 
-    console.log('✅ Email sent:', info.response);
+    console.log('✅ Email sent');
   } catch (error) {
     console.error('❌ sendEmail error:', error);
     throw error;
