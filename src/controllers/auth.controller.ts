@@ -260,6 +260,8 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   try {
     const { otp } = req.body;
 
+    console.log('Verifying OTP:', otp);
+
     if (!otp) {
       res.status(400).json({ message: 'OTP is required.' });
       return;
@@ -280,6 +282,8 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
 
     // Get user
     const user = await User.findById(otpDoc.user).session(session);
+
+    console.log('Verifying user:', user);
 
     if (!user) {
       res.status(404).json({ message: 'User not found.' });
@@ -309,6 +313,8 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     const refreshToken = generateRefreshToken({
       userId: user._id.toString(),
     });
+
+    console.log('Verifying refreshToken:', refreshToken);
 
     await session.commitTransaction();
 
