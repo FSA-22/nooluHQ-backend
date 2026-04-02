@@ -35,6 +35,7 @@ export const getDashboard = async (req: Request, res: Response) => {
       latestUsers,
     ] = await Promise.all([
       //  Revenue
+
       Subscription.aggregate([
         {
           $match: {
@@ -148,7 +149,7 @@ export const getDashboard = async (req: Request, res: Response) => {
     const churnedRevenue = currentChurnAgg[0]?.total || 0;
     const prevChurnedRevenue = prevChurnAgg[0]?.total || 0;
 
-    return res.json({
+    const response = res.json({
       revenue: {
         total: currentRevenue,
         change: getPercentageChange(currentRevenue, prevRevenue),
@@ -166,6 +167,10 @@ export const getDashboard = async (req: Request, res: Response) => {
       usersByCountry,
       latestSignups,
     });
+
+    console.log('Dashboard data fetched successfully', response);
+
+    return response;
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Dashboard fetch failed' });
