@@ -18,6 +18,7 @@ export const {
   ACCESS_TOKEN_SECRET,
   GOOGLE_CLIENT_ID,
   RESEND_API_KEY,
+  FRONTEND_URL,
 } = process.env;
 
 if (!process.env.DATABASE_URI) {

@@ -5,6 +5,7 @@ import Workspace from '../models/workspace.model.js';
 import sendEmail from '../utils/sendEmail.js';
 
 import User from '../models/users.model.js';
+import { FRONTEND_URL } from '../config/env.js';
 
 export const createWorkspace = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
@@ -154,7 +155,7 @@ export const inviteTeammate = async (req: Request, res: Response) => {
         status: 'pending',
       });
 
-      const inviteLink = `${process.env.FRONTEND_URL}/invite/${token}`;
+      const inviteLink = `${FRONTEND_URL}/invite/${token}`;
 
       try {
         await sendEmail(email, "You're invited to join a workspace", `Click: ${inviteLink}`);
@@ -183,18 +184,3 @@ export const inviteTeammate = async (req: Request, res: Response) => {
     });
   }
 };
-
-// export const skipInvite = async (req: Request, res: Response) => {
-//   const userId = req.user?.id;
-
-//   if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-
-//   await User.findByIdAndUpdate(userId, {
-//     onboardingStep: 'goal',
-//   });
-
-//   return res.status(200).json({
-//     message: 'Invite skipped',
-//     nextStep: 'goal',
-//   });
-// };
