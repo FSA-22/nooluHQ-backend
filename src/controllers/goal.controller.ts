@@ -18,35 +18,29 @@ export const createGoal = async (req: Request, res: Response): Promise<Response>
 
     const { focusId } = req.body;
 
-    console.log('Forwarding focusId:', focusId);
-    console.log('Forwarding req.user:', req.body);
-
-    // Validate goal type
-
     if (!focusId || !ALLOWED_GOALS.includes(focusId)) {
       return res.status(400).json({ message: 'Invalid goal type' });
     }
+
     const user = await User.findById(req.user.id).session(session);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     const workspace = await workspaceModel.findOne({ owner: user._id }).session(session);
-
     if (!workspace) {
       return res.status(400).json({ message: 'Workspace required' });
     }
 
-    // Prevent duplicate goal creation
     const existingGoal = await Goal.findOne({ user: user._id }).session(session);
     if (existingGoal) {
       return res.status(400).json({ message: 'Goal already set for this user' });
     }
 
-    // Create goal
-    const goal = await Goal.create([{ user: user._id, type: focusId }], { session });
+    // ✅ Create goal
+    const [goal] = await Goal.create([{ user: user._id, type: focusId }], { session });
 
-    // Ensure free plan exists
+    // ✅ Ensure free plan exists (FIXED)
     let freePlan = await Plan.findOne({ name: 'free' }).session(session);
 
     if (!freePlan) {
@@ -61,13 +55,21 @@ export const createGoal = async (req: Request, res: Response): Promise<Response>
         ],
         { session },
       );
-      freePlan = createdPlans[0];
+
+      freePlan = createdPlans[0] ?? null; // ✅ critical fix
     }
 
-    // Create subscription for free plan if not exists
+    // ✅ Safety guard (important)
+    if (!freePlan) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(500).json({ message: 'Failed to initialize free plan' });
+    }
+
+    // ✅ Create subscription
     const existingSubscription = await Subscription.findOne({ user: user._id }).session(session);
 
-    if (!existingSubscription && freePlan) {
+    if (!existingSubscription) {
       await Subscription.create(
         [
           {
@@ -85,7 +87,7 @@ export const createGoal = async (req: Request, res: Response): Promise<Response>
       );
     }
 
-    // Complete onboarding
+    // ✅ Complete onboarding
     user.onboardingStep = 'completed';
     await user.save({ session });
 
@@ -94,7 +96,7 @@ export const createGoal = async (req: Request, res: Response): Promise<Response>
 
     return res.status(201).json({
       message: 'Onboarding completed',
-      goal: goal[0],
+      goal,
       user,
     });
   } catch (error: any) {

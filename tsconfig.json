@@ -1,25 +1,43 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    /* Core */
+    "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2020"],
+    "lib": ["ES2022"],
 
-    "esModuleInterop": true,
-    "baseUrl": ".",
+    /* Structure */
     "rootDir": "./src",
     "outDir": "./dist",
-    "paths": {
-      "@/*": ["src/*"]
-    },
+    "removeComments": true,
 
+    /* Strictness (max safety) */
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
 
-    "sourceMap": true,
+    /* Interop */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    /* Output quality */
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmitOnError": true,
+
+    /* Features */
     "resolveJsonModule": true,
 
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    /* Debugging (disable in prod builds if needed) */
+    "sourceMap": false,
+
+    /* Performance */
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo",
+
+    /* Node */
+    "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

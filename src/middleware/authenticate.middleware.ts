@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload as DefaultJwtPayload } from 'jsonwebtoken';
 import User from '../models/users.model.js';
 
 const getEnv = (key: string): string => {
@@ -10,7 +10,7 @@ const getEnv = (key: string): string => {
 
 const ACCESS_TOKEN_SECRET = getEnv('ACCESS_TOKEN_SECRET');
 
-interface JwtPayload {
+interface JwtPayload extends DefaultJwtPayload {
   userId: string;
 }
 
@@ -34,17 +34,23 @@ export const requireAuth = async (
   try {
     const authHeader = req.headers.authorization;
 
-    console.log('Authorization header:', authHeader);
-
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return void res.status(401).json({ message: 'Unauthorized: No token' });
     }
-
     const token = authHeader.split(' ')[1];
 
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET) as JwtPayload;
+    if (!token) {
+      return void res.status(401).json({ message: 'Unauthorized: Invalid token format' });
+    }
 
-    const user = await User.findById(decoded.userId).select('_id onboardingStep isEmailVerified');
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+
+    if (typeof decoded === 'string' || !('userId' in decoded)) {
+      return void res.status(401).json({ message: 'Invalid token payload' });
+    }
+
+    const payload = decoded as JwtPayload;
+    const user = await User.findById(payload.userId).select('_id onboardingStep isEmailVerified');
 
     if (!user) {
       return void res.status(401).json({ message: 'Unauthorized: User not found' });

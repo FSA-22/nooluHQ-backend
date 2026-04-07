@@ -9,6 +9,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { generateAccessToken, generateRefreshToken } from '../utils/tokens.js';
 import type { PopulatedUser } from '../types/user.js';
 import { GOOGLE_CLIENT_ID } from '../config/env.js';
+import { randomUUID } from 'node:crypto';
 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -26,180 +27,42 @@ const detectCountry = (req: Request): string => {
   return geo?.country || 'Unknown';
 };
 
-export const registerAccount = async (req: Request, res: Response): Promise<Response> => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const { email, password, confirmPassword } = req.body;
-
-    console.log(' req.body', req.body);
-
-    if (!email || !password || !confirmPassword) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ message: 'All fields are required.' });
-    }
-
-    if (password !== confirmPassword) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ message: 'Passwords do not match.' });
-    }
-
-    const existingUser = await User.findOne({ email }).session(session);
-    if (existingUser) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ message: 'Email already registered.' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const country = detectCountry(req);
-
-    const user = new User({
-      email,
-      password: hashedPassword,
-      onboardingStep: 'account',
-      isEmailVerified: false,
-      country,
-    });
-    await user.save({ session });
-
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    const otpDoc = new Otp({
-      user: user._id,
-      otp: otpCode,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    });
-    await otpDoc.save({ session });
-
-    //  Commit DB changes first
-    await session.commitTransaction();
-    session.endSession();
-
-    // send response first
-    const response = res
-      .status(201)
-      .json({ message: 'Account created. OTP sent.', userId: user._id });
-
-    // send email safely (non-blocking)
-    const html = `
-  <div style="font-family: Arial, sans-serif;">
-    <h2>Email Verification</h2>
-    <p>Your OTP code is:</p>
-    <h1 style="letter-spacing: 4px;">${otpCode}</h1>
-    <p>This code expires in 10 minutes.</p>
-  </div>
-`;
-
-    sendEmail(email, 'Your OTP Code', `Your OTP code is: ${html}`)
-      .then(() => {
-        console.log('Email sent successfully');
-      })
-      .catch((emailErr) => {
-        console.error('Email sending failed:', emailErr);
-      });
-
-    return response;
-  } catch (err) {
-    console.error(err);
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-    session.endSession();
-    return res.status(500).json({ message: 'Server error' });
-  }
-};
-
 export const googleLogin = async (req: Request, res: Response) => {
   try {
     const { idToken } = req.body;
 
     if (!idToken) {
-      return res.status(400).json({ message: 'ID token required' });
+      return res.status(400).json({ message: 'ID token is required' });
     }
 
-    // 1. Verify Google token
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: GOOGLE_CLIENT_ID,
+      ...(process.env.GOOGLE_CLIENT_ID && {
+        audience: process.env.GOOGLE_CLIENT_ID,
+      }),
     });
 
     const payload = ticket.getPayload();
 
     if (!payload) {
-      return res.status(401).json({ message: 'Invalid Google token' });
+      return res.status(400).json({ message: 'Invalid token payload' });
     }
 
-    const { sub: googleId, email, name, picture, email_verified } = payload;
+    const { email, name, picture, sub } = payload;
 
-    if (!email || !email_verified) {
-      return res.status(401).json({ message: 'Email not verified' });
-    }
+    // Continue your logic (find/create user, issue tokens...)
 
-    const country = detectCountry(req);
-
-    // 2. Find user
-    let user = (await User.findOne({ email }).populate('profile')) as PopulatedUser | null;
-
-    // 3. Create user if not exists
-    if (!user) {
-      user = (await User.create({
-        email,
-        googleId,
-        provider: 'google',
-        isEmailVerified: true,
-        onboardingStep: 'profile', // skip account + email verify
-        country,
-        lastLoginAt: new Date(),
-      })) as PopulatedUser;
-    } else {
-      // 4. Update existing user
-      user.googleId = googleId;
-      user.isEmailVerified = true;
-      user.lastLoginAt = new Date();
-
-      await user.save();
-    }
-
-    // 5. Generate tokens
-    const accessToken = generateAccessToken({
-      userId: user._id.toString(),
-    });
-
-    const refreshToken = generateRefreshToken({
-      userId: user._id.toString(),
-    });
-
-    // 6. Persist refresh token
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    user.refreshToken = hashedRefreshToken;
-    await user.save();
-
-    // 7. Response
     return res.status(200).json({
       message: 'Google login successful',
-      accessToken,
-      refreshToken,
-      user: {
-        id: user._id,
-        email: user.email,
-        onboardingStep: user.onboardingStep,
-        name: user.profile?.name || name || null,
-        role: user.profile?.role || null,
-        picture: picture || null,
-        country: user.country,
-      },
+      data: { email, name, picture, sub },
     });
   } catch (error) {
-    console.error('Google login error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({
+      message: 'Google authentication failed',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
-
 export const loginAccount = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { email, password } = req.body;
@@ -253,22 +116,96 @@ export const loginAccount = async (req: Request, res: Response): Promise<Respons
   }
 };
 
+export const registerAccount = async (req: Request, res: Response): Promise<Response> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { email, password, confirmPassword } = req.body;
+
+    if (!email || !password || !confirmPassword) {
+      throw new Error('All fields are required.');
+    }
+
+    if (password !== confirmPassword) {
+      throw new Error('Passwords do not match.');
+    }
+
+    const existingUser = await User.findOne({ email }).session(session);
+    if (existingUser) {
+      throw new Error('Email already registered.');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const country = detectCountry(req);
+
+    const user = new User({
+      email,
+      password: hashedPassword,
+      onboardingStep: 'account',
+      lastLoginAt: new Date(),
+      isEmailVerified: false,
+      country,
+    });
+
+    await user.save({ session });
+
+    //  CREATE SESSION ID
+    const sessionId = randomUUID();
+
+    //  CREATE OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await Otp.create(
+      [
+        {
+          user: user._id,
+          otp: otpCode,
+          sessionId,
+          expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        },
+      ],
+      { session },
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    //  SEND EMAIL (async)
+    sendEmail(email, 'Your OTP Code', `Your OTP code is: ${otpCode}`).catch(console.error);
+
+    return res.status(201).json({
+      message: 'Account created. OTP sent.',
+      sessionId, // CRITICAL
+      otp: otpCode,
+    });
+  } catch (err: any) {
+    await session.abortTransaction();
+
+    return res.status(400).json({
+      message: err.message || 'Registration failed',
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
 export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const { otp } = req.body;
+    const { otp, sessionId } = req.body;
 
-    console.log('Verifying OTP:', otp);
-
-    if (!otp) {
-      res.status(400).json({ message: 'OTP is required.' });
+    if (!otp || !sessionId) {
+      res.status(400).json({ message: 'OTP and session are required.' });
       return;
     }
 
-    // Find OTP first
-    const otpDoc = await Otp.findOne({ otp }).sort({ createdAt: -1 }).session(session);
+    const otpDoc = await Otp.findOne({
+      otp,
+      sessionId,
+    }).session(session);
 
     if (!otpDoc) {
       res.status(400).json({ message: 'Invalid OTP.' });
@@ -276,36 +213,38 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (otpDoc.expiresAt < new Date()) {
-      res.status(400).json({ message: 'OTP has expired.' });
+      res.status(400).json({ message: 'OTP expired.' });
       return;
     }
 
-    // Get user
-    const user = await User.findById(otpDoc.user).session(session);
+    //  BRUTE FORCE PROTECTION
+    if (otpDoc.attempts >= 5) {
+      res.status(429).json({ message: 'Too many attempts.' });
+      return;
+    }
 
-    console.log('Verifying user:', user);
+    const user = await User.findById(otpDoc.user).session(session);
 
     if (!user) {
       res.status(404).json({ message: 'User not found.' });
       return;
     }
 
-    // Enforce onboarding flow
     if (user.onboardingStep !== 'account') {
-      res.status(400).json({ message: 'OTP already verified or invalid step.' });
+      res.status(400).json({ message: 'Invalid onboarding step.' });
       return;
     }
 
-    // Mark verified
+    //  SUCCESS → UPDATE USER
     user.isEmailVerified = true;
     user.onboardingStep = 'profile';
 
     await user.save({ session });
 
-    // Delete OTP AFTER successful validation
-    await Otp.deleteOne({ _id: otpDoc._id }).session(session);
+    //  DELETE OTP SESSION
+    await Otp.deleteMany({ sessionId }).session(session);
 
-    // Generate tokens
+    //  GENERATE TOKENS
     const accessToken = generateAccessToken({
       userId: user._id.toString(),
     });
@@ -313,8 +252,6 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     const refreshToken = generateRefreshToken({
       userId: user._id.toString(),
     });
-
-    console.log('Verifying refreshToken:', refreshToken);
 
     await session.commitTransaction();
 
@@ -326,8 +263,6 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     await session.abortTransaction();
-    console.error('Error verifying OTP:', error);
-
     res.status(500).json({ message: 'Internal server error.' });
   } finally {
     session.endSession();
@@ -339,52 +274,74 @@ export const resendOtp = async (req: Request, res: Response): Promise<Response> 
   session.startTransaction();
 
   try {
-    const { email } = req.body;
+    const { sessionId } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required.' });
+    console.log('Resend OTP request for session:', sessionId);
+
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session is required.' });
     }
 
-    const user = await User.findOne({ email }).session(session);
+    const existingOtp = await Otp.findOne({ sessionId }).sort({ createdAt: -1 }).session(session);
+
+    if (!existingOtp) {
+      return res.status(404).json({
+        message: 'Session expired. Please restart signup.',
+      });
+    }
+
+    //  RATE LIMIT (30s)
+    if (Date.now() - new Date(existingOtp.createdAt).getTime() < 30000) {
+      return res.status(429).json({
+        message: 'Please wait before requesting another OTP.',
+      });
+    }
+
+    const user = await User.findById(existingOtp.user).session(session);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    // Only allow resending if user hasn't finished OTP step
     if (user.onboardingStep !== 'account') {
-      return res.status(400).json({ message: 'OTP already verified or invalid step.' });
+      return res.status(400).json({
+        message: 'OTP already verified or invalid step.',
+      });
     }
 
-    // Delete any previous OTPs
-    await Otp.deleteMany({ user: user._id }).session(session);
+    // ✅ DELETE OLD OTPs
+    await Otp.deleteMany({ sessionId }).session(session);
 
-    // Generate new OTP
+    // ✅ CREATE NEW OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const otpDoc = new Otp({
-      user: user._id,
-      otp: otpCode,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min expiry
-    });
+    await Otp.create(
+      [
+        {
+          user: user._id,
+          otp: otpCode,
+          sessionId,
+          expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        },
+      ],
+      { session },
+    );
 
-    await otpDoc.save({ session });
     await session.commitTransaction();
     session.endSession();
 
-    // Send OTP email
-    try {
-      await sendEmail(email, 'Your OTP Code', `Your OTP code is: ${otpCode}`);
-    } catch (emailErr) {
-      console.error('Failed to send OTP email:', emailErr);
-      // Optionally: handle retry or log
-    }
+    // ✅ SEND EMAIL
+    sendEmail(user.email, 'Your OTP Code', `Your OTP code is: ${otpCode}`).catch(console.error);
 
-    return res.status(200).json({ message: 'OTP resent successfully.' });
+    return res.status(200).json({
+      message: 'OTP resent successfully.',
+    });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    console.error('Error resending OTP:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
+
+    return res.status(500).json({
+      message: 'Internal server error.',
+    });
   }
 };

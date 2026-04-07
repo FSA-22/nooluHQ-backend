@@ -34,8 +34,7 @@ export const getDashboard = async (req: Request, res: Response) => {
       usersByCountry,
       latestUsers,
     ] = await Promise.all([
-      //  Revenue
-
+      // Revenue
       Subscription.aggregate([
         {
           $match: {
@@ -56,7 +55,7 @@ export const getDashboard = async (req: Request, res: Response) => {
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
 
-      //  Churn
+      // Churn
       Subscription.aggregate([
         {
           $match: {
@@ -77,13 +76,13 @@ export const getDashboard = async (req: Request, res: Response) => {
         { $group: { _id: null, total: { $sum: '$amount' } } },
       ]),
 
-      //  Active Users
+      // Active Users
       User.countDocuments({ lastLoginAt: { $gte: last30Days } }),
       User.countDocuments({
         lastLoginAt: { $gte: prev30Days, $lt: last30Days },
       }),
 
-      // Revenue Over Time (use startDate)
+      // Revenue Over Time
       Subscription.aggregate([
         {
           $group: {
@@ -94,7 +93,7 @@ export const getDashboard = async (req: Request, res: Response) => {
         { $sort: { _id: 1 } },
       ]),
 
-      //  THIRD performing plan (not top)
+      // Third performing plan
       Subscription.aggregate([
         { $match: { status: 'active' } },
         {
@@ -105,7 +104,7 @@ export const getDashboard = async (req: Request, res: Response) => {
           },
         },
         { $sort: { totalRevenue: -1 } },
-        { $skip: 2 }, // skip top 2
+        { $skip: 2 },
         { $limit: 1 },
       ]),
 
@@ -120,22 +119,35 @@ export const getDashboard = async (req: Request, res: Response) => {
         { $sort: { count: -1 } },
       ]),
 
-      // Latest users with profile
-      User.find().sort({ createdAt: -1 }).limit(10).populate('profile').lean(),
+      //  Latest users (NO populate)
+      User.find().select('name email createdAt').sort({ createdAt: -1 }).limit(10).lean(),
     ]);
 
-    // Sub lookup optimized
+    // Subscription lookup
     const subscriptions = await Subscription.find({
       user: { $in: latestUsers.map((u) => u._id) },
     }).lean();
 
     const subscriptionMap = new Map(subscriptions.map((s) => [s.user?.toString(), s]));
 
+    // Get the logged-in user details
+    const currentUser = await User.findById(req.user?.id)
+      .select('name email profile')
+      .populate('profile');
+
+    const userName =
+      currentUser?.name ||
+      (typeof currentUser?.profile === 'object' && currentUser.profile !== null
+        ? (currentUser.profile as any).name
+        : null) ||
+      currentUser?.email.split('@')[0];
+
+    //  Clean mapping (uses user.name)
     const latestSignups = latestUsers.map((user) => {
       const sub = subscriptionMap.get(user._id.toString());
 
       return {
-        name: (user as any).profile?.name || user.email.split('@')[0],
+        name: user.name || user.email.split('@')[0],
         email: user.email,
         plan: sub?.planName || 'Free',
         joined: user.createdAt,
@@ -143,13 +155,18 @@ export const getDashboard = async (req: Request, res: Response) => {
       };
     });
 
-    const currentRevenue = currentRevenueAgg[0]?.total || 0;
-    const prevRevenue = prevRevenueAgg[0]?.total || 0;
+    const currentRevenue = currentRevenueAgg[0]?.total ?? 0;
+    const prevRevenue = prevRevenueAgg[0]?.total ?? 0;
 
-    const churnedRevenue = currentChurnAgg[0]?.total || 0;
-    const prevChurnedRevenue = prevChurnAgg[0]?.total || 0;
+    const churnedRevenue = currentChurnAgg[0]?.total ?? 0;
+    const prevChurnedRevenue = prevChurnAgg[0]?.total ?? 0;
 
-    const response = res.json({
+    return res.json({
+      user: {
+        id: currentUser?._id,
+        name: userName,
+        email: currentUser?.email,
+      },
       revenue: {
         total: currentRevenue,
         change: getPercentageChange(currentRevenue, prevRevenue),
@@ -163,16 +180,12 @@ export const getDashboard = async (req: Request, res: Response) => {
         change: getPercentageChange(currentUsers, prevUsers),
       },
       revenueOverTime,
-      thirdPerformingPlan: thirdPlan[0] || null,
+      thirdPerformingPlan: thirdPlan[0] || 60,
       usersByCountry,
       latestSignups,
     });
-
-    console.log('Dashboard data fetched successfully', response);
-
-    return response;
   } catch (error) {
-    console.error(error);
+    console.error('Dashboard error:', error);
     return res.status(500).json({ message: 'Dashboard fetch failed' });
   }
 };

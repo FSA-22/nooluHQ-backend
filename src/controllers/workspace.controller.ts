@@ -103,12 +103,14 @@ export const acceptInvite = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invite already used' });
     }
 
-    // Convert string → ObjectId
+    // ✅ Convert string → ObjectId
     teammate.user = new mongoose.Types.ObjectId(userId);
 
     teammate.status = 'joined';
-    teammate.inviteToken = undefined;
-    teammate.inviteExpires = undefined;
+
+    // ✅ FIX: use null instead of undefined
+    teammate.inviteToken = null;
+    teammate.inviteExpires = null;
 
     await workspace.save();
 
@@ -122,7 +124,6 @@ export const acceptInvite = async (req: Request, res: Response) => {
     });
   }
 };
-
 export const inviteTeammate = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
